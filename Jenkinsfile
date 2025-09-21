@@ -1,29 +1,43 @@
 pipeline {
     agent any
+    parameters {
+        choice(
+            name: 'TF_OPERATION',
+            choices: ['plan', 'apply', 'destroy'],
+            description: 'Select Terraform operation to perform'
+        )
+    }
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'
+    }
     stages {
-        stage('Show System Info') {
+        stage('Checkout') {
             steps {
-                echo 'Operating System:'
-                sh 'uname -a'
-                echo 'CPU Info:'
-                sh 'lscpu || cat /proc/cpuinfo'
-                echo 'Memory Info:'
-                sh 'free -h || cat /proc/meminfo'
-                echo 'Disk Usage:'
-                sh 'df -h'
+                checkout scm
             }
         }
-        stage('Verify GitHub Access') {
+        stage('Terraform Init') {
             steps {
-                echo 'Checking GitHub access...'
-                sh 'git ls-remote https://github.com/github/git.git HEAD'
+                sh 'terraform init'
             }
         }
-        stage('Verify AWS Access') {
+        stage('Terraform ${params.TF_OPERATION}') {
             steps {
-                echo 'Checking AWS access...'
-                sh 'aws sts get-caller-identity'
+                script {
+                    if (params.TF_OPERATION == 'plan') {
+                        sh 'terraform plan -out=tfplan'
+                    } else if (params.TF_OPERATION == 'apply') {
+                        sh 'terraform apply -auto-approve'
+                    } else if (params.TF_OPERATION == 'destroy') {
+                        sh 'terraform destroy -auto-approve'
+                    }
+                }
             }
+        }
+    }
+    post {
+        always {
+            cleanWs()
         }
     }
 }
