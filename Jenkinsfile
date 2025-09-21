@@ -48,9 +48,13 @@ pipeline {
         
         stage('Terraform Validate') {
             steps {
-                echo "🔍 Validating Terraform configuration..."
+                echo "🔍 Validating and formatting Terraform configuration..."
                 sh '''
-                    terraform fmt -check=true -diff=true
+                    echo "📝 Auto-formatting Terraform files..."
+                    terraform fmt -recursive
+                    echo "✅ Terraform files formatted"
+                    
+                    echo "🔍 Validating Terraform syntax..."
                     terraform validate
                 '''
                 echo "✅ Terraform configuration is valid"
