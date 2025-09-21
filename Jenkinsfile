@@ -13,5 +13,17 @@ pipeline {
                 sh 'df -h'
             }
         }
+        stage('Verify GitHub Access') {
+            steps {
+                echo 'Checking GitHub access...'
+                sh 'git ls-remote https://github.com/github/git.git HEAD'
+            }
+        }
+        stage('Verify AWS Access') {
+            steps {
+                echo 'Checking AWS access...'
+                sh 'aws sts get-caller-identity'
+            }
+        }
     }
 }
